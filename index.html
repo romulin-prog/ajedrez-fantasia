@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ajedrez Fantasía</title>
+
+<style>
+body{
+  background:#1e1e1e;
+  color:white;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  font-family:Arial, Helvetica, sans-serif;
+}
+
+h2{margin-bottom:10px;}
+
+table{
+  border-collapse:collapse;
+}
+
+td{
+  width:70px;
+  height:70px;
+  text-align:center;
+  font-size:46px;
+  cursor:pointer;
+  user-select:none;
+}
+
+.blanca{background:#f0d9b5;}
+.negra{background:#b58863;}
+.sel{outline:4px solid red;}
+
+p{
+  margin-top:10px;
+  font-size:14px;
+  opacity:.9;
+}
+</style>
+</head>
+
+<body>
+
+<h2 id="estado">Turno: Blancas</h2>
+<table id="tablero"></table>
+<p>
+?? Oso inmortal · ?? Mono (1–2 recto) · ?? Elefante (diagonal 2 sin salto)
+</p>
+
+<script>
+// =====================
+// CONSTANTES
+// =====================
+const tablero = document.getElementById("tablero");
+const estado  = document.getElementById("estado");
+
+const BLANCAS = "??????????";
+const NEGRAS  = "??????????";
+
+const OSO = "??";
+const MONO_B = "??";
+const MONO_N = "??";
+const ELEFANTE = "??";
+
+let turno = "blanco";
+let seleccion = null;
+
+// =====================
+// TABLERO INICIAL
+// =====================
+let board = [
+["?","??","?","?","?","?","?","??"],
+["?","?","??","?","?","?","?","?"],
+["","","","","","","",""],
+["","","","??","","","",""],
+["","","","","","","",""],
+["","","","","","","",""],
+["?","?","??","?","?","?","?","?"],
+["?","??","?","?","?","?","?","??"]
+];
+
+// =====================
+// UTILIDADES
+// =====================
+const esBlanca = p => BLANCAS.includes(p);
+const esNegra  = p => NEGRAS.includes(p);
+
+function capturable(i,j,ni,nj){
+  if(board[ni][nj]===OSO) return false;
+  return board[ni][nj]==="" ||
+    esBlanca(board[i][j]) !== esBlanca(board[ni][nj]);
+}
+
+// =====================
+// DIBUJAR TABLERO
+// =====================
+function dibujar(){
+  tablero.innerHTML="";
+  for(let i=0;i<8;i++){
+    let tr=document.createElement("tr");
+    for(let j=0;j<8;j++){
+      let td=document.createElement("td");
+      td.textContent=board[i][j];
+      td.className=(i+j)%2?"negra":"blanca";
+      if(seleccion && seleccion[0]===i && seleccion[1]===j){
+        td.classList.add("sel");
+      }
+      td.onclick=()=>click(i,j);
+      tr.appendChild(td);
+    }
+    tablero.appendChild(tr);
+  }
+}
+
+// =====================
+// CLICK
+// =====================
+function click(i,j){
+  let p=board[i][j];
+
+  if(seleccion){
+    let [si,sj]=seleccion;
+    if(legal(si,sj,i,j)){
+      board[i][j]=board[si][sj];
+      board[si][sj]="";
+      turno=turno==="blanco"?"negro":"blanco";
+      estado.textContent="Turno: "+(turno==="blanco"?"Blancas":"Negras");
+      seleccion=null;
+      dibujar();
+      verificarVictoria();
+      return;
+    }
+    seleccion=null;
+    dibujar();
+    return;
+  }
+
+  if(
+    (turno==="blanco" && esBlanca(p)) ||
+    (turno==="negro" && esNegra(p)) ||
+    p===OSO
+  ){
+    seleccion=[i,j];
+    dibujar();
+  }
+}
+
+// =====================
+// MOVIMIENTOS
+// =====================
+function legal(i,j,ni,nj){
+  if(ni<0||ni>7||nj<0||nj>7) return false;
+
+  let p=board[i][j];
+  let dx=Math.abs(ni-i), dy=Math.abs(nj-j);
+
+  // OSO
+  if(p===OSO){
+    return dx<=1 && dy<=1 && board[ni][nj]==="";
+  }
+
+  // MONO
+  if(p===MONO_B||p===MONO_N){
+    if(i!==ni && j!==nj) return false;
+    let pasos=Math.max(dx,dy);
+    if(pasos>2) return false;
+    return linea(i,j,ni,nj);
+  }
+
+  // ELEFANTE
+  if(p===ELEFANTE){
+    if(dx!==2||dy!==2) return false;
+    let mi=(i+ni)/2, mj=(j+nj)/2;
+    if(board[mi][mj]!=="") return false;
+    return capturable(i,j,ni,nj);
+  }
+
+  // PEONES
+  if("??".includes(p)){
+    let dir=esBlanca(p)?-1:1;
+    if(j===nj && ni===i+dir && board[ni][nj]==="") return true;
+    if(Math.abs(j-nj)===1 && ni===i+dir && board[ni][nj]!=="") return true;
+    return false;
+  }
+
+  // TORRE
+  if("??".includes(p)) return linea(i,j,ni,nj);
+
+  // ALFIL
+  if("??".includes(p)) return dx===dy && linea(i,j,ni,nj);
+
+  // REINA
+  if("??".includes(p)) return (dx===dy||i===ni||j===nj) && linea(i,j,ni,nj);
+
+  // CABALLO
+  if("??".includes(p)) return dx*dy===2;
+
+  // REY
+  if("??".includes(p)) return dx<=1 && dy<=1;
+
+  return false;
+}
+
+function linea(i,j,ni,nj){
+  let dx=Math.sign(ni-i), dy=Math.sign(nj-j);
+  let x=i+dx,y=j+dy;
+  while(x!==ni||y!==nj){
+    if(board[x][y]!=="") return false;
+    x+=dx;y+=dy;
+  }
+  return capturable(i,j,ni,nj);
+}
+
+// =====================
+// VICTORIA
+// =====================
+function reyMuerto(color){
+  let rey=color==="blanco"?"?":"?";
+  for(let f of board)
+    for(let c of f)
+      if(c===rey) return false;
+  return true;
+}
+
+function reinaViva(color){
+  let reina=color==="blanco"?"?":"?";
+  for(let f of board)
+    for(let c of f)
+      if(c===reina) return true;
+  return false;
+}
+
+function verificarVictoria(){
+  let enemigo=turno==="blanco"?"negro":"blanco";
+  if(reyMuerto(enemigo)&&!reinaViva(enemigo)){
+    alert("¡Ganan las "+(turno==="blanco"?"Blancas":"Negras")+"!");
+  }
+}
+
+// =====================
+dibujar();
+</script>
+
+</body>
+</html>
