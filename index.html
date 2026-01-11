@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>Ajedrez Fantas�a</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Ajedrez Fantasía</title>
 
 <style>
 body{
@@ -13,7 +14,9 @@ body{
   justify-content:center;
   align-items:center;
   height:100vh;
-  font-family:Arial, Helvetica, sans-serif;
+  font-family: "Segoe UI Emoji", "Apple Color Emoji",
+             "Noto Color Emoji", "Segoe UI Symbol",
+             Arial, sans-serif;
 }
 
 h2{margin-bottom:10px;}
@@ -48,7 +51,7 @@ p{
 <h2 id="estado">Turno: Blancas</h2>
 <table id="tablero"></table>
 <p>
-?? Oso inmortal � ?? Mono (1�2 recto) � ?? Elefante (diagonal 2 sin salto)
+🐻 Oso inmortal · 🐒 Mono (1–2 recto) · 🐘 Elefante (diagonal 2 sin salto)
 </p>
 
 <script>
@@ -58,13 +61,13 @@ p{
 const tablero = document.getElementById("tablero");
 const estado  = document.getElementById("estado");
 
-const BLANCAS = "??????????";
-const NEGRAS  = "??????????";
+const BLANCAS = "♔♕♖♗♘♙🐒🐘";
+const NEGRAS  = "♚♛♜♝♞♟🐵🐘";
 
-const OSO = "??";
-const MONO_B = "??";
-const MONO_N = "??";
-const ELEFANTE = "??";
+const OSO = "🐻";
+const MONO_B = "🐒";
+const MONO_N = "🐵";
+const ELEFANTE = "🐘";
 
 let turno = "blanco";
 let seleccion = null;
@@ -73,14 +76,14 @@ let seleccion = null;
 // TABLERO INICIAL
 // =====================
 let board = [
-["?","??","?","?","?","?","?","??"],
-["?","?","??","?","?","?","?","?"],
+["♜","🐵","♞","♝","♛","♝","♞","🐵"],
+["♟","♟","🐘","♟","♟","♟","♟","♟"],
 ["","","","","","","",""],
-["","","","??","","","",""],
+["","","","🐻","","","",""],
 ["","","","","","","",""],
 ["","","","","","","",""],
-["?","?","??","?","?","?","?","?"],
-["?","??","?","?","?","?","?","??"]
+["♙","♙","🐘","♙","♙","♙","♙","♙"],
+["♖","🐒","♘","♗","♕","♗","♘","🐒"]
 ];
 
 // =====================
@@ -180,7 +183,7 @@ function legal(i,j,ni,nj){
   }
 
   // PEONES
-  if("??".includes(p)){
+  if("♙♟".includes(p)){
     let dir=esBlanca(p)?-1:1;
     if(j===nj && ni===i+dir && board[ni][nj]==="") return true;
     if(Math.abs(j-nj)===1 && ni===i+dir && board[ni][nj]!=="") return true;
@@ -188,19 +191,19 @@ function legal(i,j,ni,nj){
   }
 
   // TORRE
-  if("??".includes(p)) return linea(i,j,ni,nj);
+  if("♖♜".includes(p)) return linea(i,j,ni,nj);
 
   // ALFIL
-  if("??".includes(p)) return dx===dy && linea(i,j,ni,nj);
+  if("♗♝".includes(p)) return dx===dy && linea(i,j,ni,nj);
 
   // REINA
-  if("??".includes(p)) return (dx===dy||i===ni||j===nj) && linea(i,j,ni,nj);
+  if("♕♛".includes(p)) return (dx===dy||i===ni||j===nj) && linea(i,j,ni,nj);
 
   // CABALLO
-  if("??".includes(p)) return dx*dy===2;
+  if("♘♞".includes(p)) return dx*dy===2;
 
   // REY
-  if("??".includes(p)) return dx<=1 && dy<=1;
+  if("♔♚".includes(p)) return dx<=1 && dy<=1;
 
   return false;
 }
@@ -219,7 +222,7 @@ function linea(i,j,ni,nj){
 // VICTORIA
 // =====================
 function reyMuerto(color){
-  let rey=color==="blanco"?"?":"?";
+  let rey=color==="blanco"?"♔":"♚";
   for(let f of board)
     for(let c of f)
       if(c===rey) return false;
@@ -227,7 +230,7 @@ function reyMuerto(color){
 }
 
 function reinaViva(color){
-  let reina=color==="blanco"?"?":"?";
+  let reina=color==="blanco"?"♕":"♛";
   for(let f of board)
     for(let c of f)
       if(c===reina) return true;
@@ -237,7 +240,7 @@ function reinaViva(color){
 function verificarVictoria(){
   let enemigo=turno==="blanco"?"negro":"blanco";
   if(reyMuerto(enemigo)&&!reinaViva(enemigo)){
-    alert("�Ganan las "+(turno==="blanco"?"Blancas":"Negras")+"!");
+    alert("¡Ganan las "+(turno==="blanco"?"Blancas":"Negras")+"!");
   }
 }
 
